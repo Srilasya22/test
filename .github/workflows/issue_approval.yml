@@ -12,13 +12,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up GitHub CLI
+    - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '14'
-      
+
     - name: Install GitHub CLI
-      run: sudo apt-get install gh
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gh jq
 
     - name: Authenticate GitHub CLI
       env:
@@ -26,14 +28,21 @@ jobs:
       run: |
         echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
+    - name: Debug Environment Variables
+      run: |
+        echo "GitHub Event Path: $GITHUB_EVENT_PATH"
+        cat $GITHUB_EVENT_PATH
+
     - name: Add pending-approval label on issue creation
       if: github.event.action == 'opened'
       run: |
         ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
+        echo "Issue number: $ISSUE_NUMBER"
         gh issue edit $ISSUE_NUMBER --add-label "pending-approval"
 
     - name: Remove pending-approval label on approval
       if: github.event.action == 'labeled' && github.event.label.name == 'approved'
       run: |
         ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
+        echo "Issue number: $ISSUE_NUMBER"
         gh issue edit $ISSUE_NUMBER --remove-label "pending-approval"
