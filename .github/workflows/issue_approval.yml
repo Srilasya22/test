@@ -1,3 +1,4 @@
+
 name: Issue Approval
 
 on:
@@ -12,12 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '14'
-
-    - name: Install GitHub CLI
+    - name: Install GitHub CLI and jq
       run: |
         sudo apt-get update
         sudo apt-get install -y gh jq
