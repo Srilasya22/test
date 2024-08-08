@@ -1,0 +1,23 @@
+name: Issue Approval
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  approval:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check if issue is pending approval
+      if: github.event.action == 'opened'
+      run: |
+        ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
+        echo "Pending approval for issue #$ISSUE_NUMBER"
+        gh issue edit $ISSUE_NUMBER --add-label "pending-approval"
+      
+    - name: Check for approval
+      if: github.event.action == 'labeled' && github.event.label.name == 'approved'
+      run: |
+        ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
+        gh issue edit $ISSUE_NUMBER --remove-label "pending-approval"
