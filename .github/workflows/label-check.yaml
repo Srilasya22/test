@@ -1,0 +1,43 @@
+name: Restrict Label Addition
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  check-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Check for Restricted Label
+        id: check_label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labelName = 'restricted-label';  // Change to your label name
+            const user = context.payload.sender.login;
+            const isOwner = context.repo.owner === user;
+
+            if (context.payload.label.name === labelName && !isOwner) {
+              throw new Error(`Label "${labelName}" can only be added by the repository owner.`);
+            }
+            
+            return 'Label check passed.';
+
+      - name: Remove Restricted Label (if necessary)
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { issue } = context.payload;
+            const labelName = 'approved';  
+
+            await github.issues.removeLabel({
+              ...context.repo,
+              issue_number: issue.number,
+              name: labelName
+            });
+
+            console.log(`Removed label "${labelName}" from issue #${issue.number}`);
