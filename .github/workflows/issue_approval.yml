@@ -17,11 +17,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gh jq
 
-    - name: Authenticate GitHub CLI
+    - name: Configure GitHub CLI with GITHUB_TOKEN
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh auth status
 
     - name: Debug Environment Variables
       run: |
@@ -30,6 +29,8 @@ jobs:
 
     - name: Add pending-approval label on issue creation
       if: github.event.action == 'opened'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
         echo "Issue number: $ISSUE_NUMBER"
@@ -37,6 +38,8 @@ jobs:
 
     - name: Remove pending-approval label on approval
       if: github.event.action == 'labeled' && github.event.label.name == 'approved'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
         echo "Issue number: $ISSUE_NUMBER"
