@@ -34,7 +34,14 @@ jobs:
       run: |
         ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
         echo "Issue number: $ISSUE_NUMBER"
-        gh issue edit $ISSUE_NUMBER --add-label "pending-approval"
+        
+        # Check if the 'approved' label already exists
+        APPROVED_LABEL_EXISTS=$(gh issue view $ISSUE_NUMBER --json labels -q '.labels | map(select(.name == "approved")) | length')
+        if [ "$APPROVED_LABEL_EXISTS" -eq 0 ]; then
+          gh issue edit $ISSUE_NUMBER --add-label "pending-approval"
+        else
+          echo "'approved' label already exists, skipping 'pending-approval' label"
+        fi
 
     - name: Remove pending-approval label on approval
       if: github.event.action == 'labeled' && github.event.label.name == 'approved'
@@ -43,4 +50,6 @@ jobs:
       run: |
         ISSUE_NUMBER=$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")
         echo "Issue number: $ISSUE_NUMBER"
+        
+        # Remove 'pending-approval' label
         gh issue edit $ISSUE_NUMBER --remove-label "pending-approval"
