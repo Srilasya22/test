@@ -1,3 +1,2 @@
 Python
 Java
-Javascript
