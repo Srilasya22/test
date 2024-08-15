@@ -3,4 +3,3 @@ Here is list of languages
 pytho 
 java
 go
-javascript
